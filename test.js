@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { app, generateNvidiaPoster, hashPassword, verifyPassword } from './server.js';
+import defaultApp, { app, generateNvidiaPoster, hashPassword, verifyPassword } from './server.js';
+
+test('Express app is exported as the default Vercel handler', () => {
+  assert.equal(defaultApp, app);
+});
 
 test('Itinerary API requires an authenticated user', async (t) => {
   const server = app.listen(0);

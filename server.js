@@ -1141,3 +1141,4 @@ if (isMain) {
 }
 
 export { app, generateNvidiaPoster, hashPassword, verifyPassword };
+export default app;

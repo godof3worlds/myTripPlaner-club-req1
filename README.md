@@ -107,6 +107,11 @@ The server will start at `http://localhost:3000`. Open your browser and navigate
 http://localhost:3000
 ```
 
+### Deploy to Vercel
+Import the GitHub repository into Vercel and add the required environment variables in **Project Settings → Environment Variables**. Set `SUPABASE_URL` and `SUPABASE_KEY` for account and itinerary features. Add `OPENROUTER_API_KEY` and `NVIDIA_API_KEY_for_Posters` to enable AI chat and poster generation. Do not commit `.env` or paste secrets into source files.
+
+Vercel serves this Express app through its default export in `server.js`. After changing environment variables, redeploy so the new values are applied.
+
 ---
 
 ## 📡 REST API Documentation

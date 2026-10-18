@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise - Smart Travel Planner</title>
+  <meta name="description" content="Explore global destinations, view live weather forecasts, and craft your custom travel itinerary with TripWise.">
+  <link rel="icon" type="image/png" href="tripwise-logo.png">
+  <link rel="apple-touch-icon" href="tripwise-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Fixed Background Video linked to scroll -->
+  <div class="bg-video-wrap" aria-hidden="true">
+    <video id="bg-video" class="bg-video" src="bg-video.mp4" muted playsinline preload="auto"></video>
+    <div class="bg-video-overlay"></div>
+  </div>
+  <div class="travel-wheel-backdrop" aria-hidden="true">
+    <img class="travel-wheel travel-wheel-left" data-scroll-wheel src="travel-wheel.png" alt="" decoding="async">
+    <img class="travel-wheel travel-wheel-right" data-scroll-wheel src="travel-wheel.png" alt="" decoding="async">
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand" id="brand-logo">
+        <img class="brand-icon" src="tripwise-logo.png" alt="">
+        <div class="brand-text">
+          <span class="brand-title">TripWise</span>
+          <span class="brand-badge">Full-Stack</span>
+        </div>
+      </div>
+
+      <!-- Live API & DB Status Pills -->
+      <div class="status-indicator-bar" id="system-status">
+        <span class="status-pill" id="db-status-pill" title="Supabase configuration status">
+          <span class="dot"></span> <span id="db-type-label">Checking Supabase</span>
+        </span>
+        <span class="status-pill status-live" title="Live External Weather API">
+          <span class="dot"></span> Open-Meteo Live API
+        </span>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" id="tab-explore" data-target="view-explore">
+          <span class="tab-icon">🗺️</span> Explore
+        </button>
+        <button class="nav-tab" id="tab-itinerary" data-target="view-itinerary">
+          <span class="tab-icon">🧳</span> My Itinerary
+          <span class="itinerary-badge" id="itinerary-count-badge">0</span>
+        </button>
+      </nav>
+
+      <!-- User Auth Bar -->
+      <div class="user-auth-bar" id="user-auth-bar">
+        <button class="btn-primary btn-sm" id="btn-open-login" title="Sign in or create account">
+          <span>👤 Sign In</span>
+        </button>
+        <div class="user-profile-pill" id="user-profile-pill" style="display: none;">
+          <span class="user-avatar" id="user-avatar-initial">U</span>
+          <span class="user-name" id="user-display-name">Traveler</span>
+          <button class="btn-text btn-logout" id="btn-logout" title="Sign out of account">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- EXPLORE VIEW -->
+    <section id="view-explore" class="tab-view active">
+      <!-- Hero Banner -->
+      <div class="hero-section">
+        <div class="hero-layout">
+          <div class="hero-content">
+            <span class="hero-eyebrow"><span class="hero-eyebrow-dot"></span> MAKE ROOM FOR WONDER</span>
+            <h1 class="hero-title">The world is<br>closer than <span class="gradient-text">you think.</span></h1>
+            <p class="hero-subtitle">Find your next somewhere. Explore remarkable places, check the weather, and start a trip worth remembering.</p>
+            <div class="hero-highlights" aria-label="TripWise features">
+              <span><span class="highlight-check">✓</span> Handpicked destinations</span>
+              <span><span class="highlight-check">✓</span> Live local weather</span>
+              <span><span class="highlight-check">✓</span> Your own itinerary</span>
+            </div>
+          </div>
+
+          <aside class="hero-spotlight" aria-label="Featured destination">
+            <img id="hero-spotlight-img" class="hero-spotlight-img" src="" alt="" fetchpriority="high">
+            <div class="hero-spotlight-shade"></div>
+            <div class="hero-spotlight-content">
+              <span class="spotlight-label"><span></span> A PLACE TO START</span>
+              <h2 id="hero-spotlight-title">Somewhere wonderful</h2>
+              <p id="hero-spotlight-location">Your next trip is waiting</p>
+              <div class="hero-spotlight-weather" id="hero-spotlight-weather"></div>
+            </div>
+            <span class="hero-spotlight-index" aria-hidden="true">01 / EXPLORE</span>
+          </aside>
+        </div>
+
+        <!-- Search & Control Panel -->
+        <div class="controls-card">
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input 
+              type="text" 
+              id="search-input" 
+              placeholder="Search by city, country, landmark, or vibe..." 
+              autocomplete="off"
+            />
+            <button class="clear-search-btn" id="clear-search-btn" style="display: none;" title="Clear search">✕</button>
+          </div>
+
+          <div class="filter-sort-row">
+            <!-- Category Chips -->
+            <div class="category-chips" id="category-chips">
+              <button class="chip active" data-category="all">All</button>
+              <button class="chip" data-category="Landmark">Landmarks</button>
+              <button class="chip" data-category="Culture">Culture</button>
+              <button class="chip" data-category="Nature">Nature</button>
+              <button class="chip" data-category="Beach">Beach</button>
+              <button class="chip" data-category="Adventure">Adventure</button>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="sort-wrapper">
+              <label for="sort-select">Sort by:</label>
+              <select id="sort-select">
+                <option value="rating">Top Rated ⭐</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="temp-desc">Warmest Weather ☀️</option>
+                <option value="temp-asc">Coolest Weather ❄️</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service highlights -->
+        <div class="feature-bar">
+          <div class="feature-pill">
+            <span class="feature-icon">✳</span>
+            <div class="feature-info">
+              <span class="feature-title">Find your kind of place</span>
+              <span class="feature-sub">Landmarks, coastlines, culture & more</span>
+            </div>
+          </div>
+          <div class="feature-pill">
+            <span class="feature-icon">◎</span>
+            <div class="feature-info">
+              <span class="feature-title">Know before you go</span>
+              <span class="feature-sub">Live weather at every destination</span>
+            </div>
+          </div>
+          <div class="feature-pill">
+            <span class="feature-icon">↗</span>
+            <div class="feature-info">
+              <span class="feature-title">Make it your trip</span>
+              <span class="feature-sub">Save places, dates & notes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Stats Header -->
+      <div class="results-header">
+        <div class="results-counter" id="results-count">Loading destinations...</div>
+        <div class="results-actions">
+          <button class="btn-text" id="reset-filters-btn" style="display: none;">Reset all filters</button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" id="loading-explore" style="display: none;">
+        <div class="spinner"></div>
+        <p>Fetching destinations & live weather data...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error-banner" id="error-explore" style="display: none;">
+        <span class="error-icon">⚠️</span>
+        <div class="error-text">
+          <strong id="error-title">Failed to load destinations</strong>
+          <p id="error-message">Could not connect to the backend server. Please try again.</p>
+        </div>
+        <button class="btn-secondary" id="retry-explore-btn">Retry</button>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="empty-explore" style="display: none;">
+        <div class="empty-icon">📍</div>
+        <h3>No destinations found</h3>
+        <p>No places matched your search query or selected category. Try tweaking your keywords or resetting filters.</p>
+        <button class="btn-primary" id="empty-reset-btn">Reset Filters</button>
+      </div>
+
+      <!-- Destinations Grid -->
+      <div class="destinations-grid" id="destinations-grid"></div>
+      <div class="load-more-wrap" id="load-more-wrap" style="display: none;">
+        <button class="btn-secondary" id="load-more-destinations">Show more destinations</button>
+        <span class="load-more-count" id="load-more-count"></span>
+      </div>
+    </section>
+
+    <!-- ITINERARY VIEW -->
+    <section id="view-itinerary" class="tab-view">
+      <div class="itinerary-header">
+        <div>
+          <h2 class="view-title">My Travel Itinerary</h2>
+          <p class="view-subtitle">Your saved destinations persisted securely in the database.</p>
+        </div>
+        <div class="itinerary-stats" id="itinerary-summary-stats">
+          <div class="stat-badge">
+            <span class="stat-number" id="stat-total-dest">0</span>
+            <span class="stat-label">Destinations</span>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-number" id="stat-total-countries">0</span>
+            <span class="stat-label">Countries</span>
+          </div>
+          <button class="btn-secondary itinerary-chat-toggle" id="itinerary-chat-toggle" type="button" aria-expanded="false" aria-controls="itinerary-chat-panel">
+            <span aria-hidden="true">💬</span> Trip AI chat
+          </button>
+          <button class="btn-secondary" id="btn-zero-itinerary" title="Zero out saved itinerary data from database" style="margin-left: 0.5rem;">
+            🗑️ Clear All
+          </button>
+        </div>
+      </div>
+
+      <section class="itinerary-chat-panel" id="itinerary-chat-panel" aria-labelledby="itinerary-chat-title" hidden>
+        <div class="itinerary-chat-heading">
+          <div>
+            <span class="itinerary-chat-eyebrow">YOUR TRIP ASSISTANT</span>
+            <h3 id="itinerary-chat-title">Plan around a saved destination</h3>
+            <p>Ask about your place or ask TripWise to make a travel poster for it.</p>
+          </div>
+          <span class="chat-status" id="itinerary-chat-status" role="status">Checking AI setup</span>
+        </div>
+        <label class="itinerary-chat-destination">
+          <span>Selected place</span>
+          <select id="itinerary-chat-destination" aria-label="Select a saved destination"></select>
+        </label>
+        <div class="itinerary-chat-messages" id="itinerary-chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+        <form class="itinerary-chat-compose" id="itinerary-chat-form">
+          <input id="itinerary-chat-input" type="text" placeholder="Ask about your place or say “make a poster”..." aria-label="Message TripWise AI" maxlength="1600" autocomplete="off">
+          <button class="btn-primary" id="itinerary-chat-send" type="submit">Send</button>
+        </form>
+        <p class="itinerary-chat-footnote">AI replies and poster generation may take time and use your configured provider accounts.</p>
+      </section>
+
+      <!-- Itinerary Loading -->
+      <div class="loading-state" id="loading-itinerary" style="display: none;">
+        <div class="spinner"></div>
+        <p>Loading your itinerary from database...</p>
+      </div>
+
+      <!-- Itinerary Empty State -->
+      <div class="empty-state" id="empty-itinerary" style="display: none;">
+        <div class="empty-icon">🗺️</div>
+        <h3>Your itinerary is empty</h3>
+        <p>You haven't added any destinations yet. Explore the world's top spots and add your favorites to start planning!</p>
+        <button class="btn-primary" id="goto-explore-btn">Explore Destinations</button>
+      </div>
+
+      <!-- Itinerary Grid -->
+      <div class="itinerary-grid" id="itinerary-grid"></div>
+    </section>
+
+  </main>
+
+  <!-- Destination Details Modal -->
+  <div class="modal-overlay" id="destination-modal" style="display: none;">
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close-btn" aria-label="Close modal">✕</button>
+      
+      <div class="modal-media-wrapper">
+        <img id="modal-img" src="" alt="Destination photo" class="modal-img">
+        <span class="category-pill" id="modal-category"></span>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-title-row">
+          <div>
+            <h2 id="modal-title" class="modal-title"></h2>
+            <p id="modal-location" class="modal-location"></p>
+          </div>
+          <div class="modal-rating" id="modal-rating"></div>
+        </div>
+
+        <p id="modal-description" class="modal-description"></p>
+
+        <div class="modal-itinerary-meta" id="modal-itinerary-meta" hidden></div>
+
+        <!-- Live Weather Widget inside Modal -->
+        <div class="weather-widget">
+          <div class="weather-widget-header">
+            <span class="weather-title">Real-Time Weather (Open-Meteo)</span>
+            <span class="weather-icon-large" id="modal-weather-icon">☀️</span>
+          </div>
+          <div class="weather-grid">
+            <div class="weather-cell">
+              <span class="weather-cell-label">Temperature</span>
+              <span class="weather-cell-val" id="modal-weather-temp">--°C</span>
+            </div>
+            <div class="weather-cell">
+              <span class="weather-cell-label">Condition</span>
+              <span class="weather-cell-val" id="modal-weather-cond">--</span>
+            </div>
+            <div class="weather-cell">
+              <span class="weather-cell-label">Feels Like</span>
+              <span class="weather-cell-val" id="modal-weather-feels">--°C</span>
+            </div>
+            <div class="weather-cell">
+              <span class="weather-cell-label">Wind Speed</span>
+              <span class="weather-cell-val" id="modal-weather-wind">-- km/h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add to Itinerary Form -->
+        <div class="modal-form-section">
+          <h3>Add to Your Itinerary</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="modal-plan-date">Planned Date:</label>
+              <input type="date" id="modal-plan-date" />
+            </div>
+            <div class="form-group">
+              <label for="modal-notes">Trip Notes (optional):</label>
+              <input type="text" id="modal-notes" placeholder="e.g. Visit before sunset, book tickets" />
+            </div>
+          </div>
+          <div class="modal-action-row">
+            <button class="btn-primary btn-block" id="modal-add-btn">
+              <span>+ Add to Itinerary</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Secure Login / Register Modal -->
+  <div class="modal-overlay" id="auth-modal" style="display: none;">
+    <div class="modal-card auth-modal-card">
+      <button class="modal-close" id="auth-modal-close-btn" aria-label="Close modal">✕</button>
+
+      <div class="auth-card-header">
+        <img class="auth-icon-badge" src="tripwise-logo.png" alt="">
+        <h2 id="auth-modal-title">Welcome to TripWise</h2>
+        <p id="auth-modal-subtitle">Sign in to save and manage your personal travel itinerary.</p>
+      </div>
+
+      <!-- Auth Switcher Tabs -->
+      <div class="auth-switch-tabs">
+        <button type="button" class="auth-tab-btn active" id="auth-tab-login">Sign In</button>
+        <button type="button" class="auth-tab-btn" id="auth-tab-register">Create Account</button>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="auth-form" class="auth-form" novalidate>
+        <div class="form-group" id="group-name" style="display: none;">
+          <label for="auth-name">Your Full Name</label>
+          <input type="text" id="auth-name" placeholder="e.g. Alex Morgan" autocomplete="name" />
+        </div>
+
+        <div class="form-group">
+          <label for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" placeholder="At least 6 characters" required minlength="6" autocomplete="current-password" />
+        </div>
+
+        <div class="auth-feedback-banner" id="auth-feedback-banner" style="display: none;"></div>
+
+        <button type="submit" class="btn-primary btn-block" id="auth-submit-btn">
+          Sign In
+        </button>
+
+        <div class="auth-footer-note">
+          <span id="auth-footer-prompt">Don't have an account?</span>
+          <button type="button" class="btn-text" id="auth-switch-link">Create one</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <p><strong>TripWise</strong> - Smart Travel Planner | Track 3: Full-Stack Development</p>
+      <p class="footer-sub">Built with Node.js, Express, Supabase, Open-Meteo & Wikimedia Commons</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

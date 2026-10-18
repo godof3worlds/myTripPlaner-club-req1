@@ -1,7 +1,7 @@
 # TripWise - Smart Travel Planner
 **Track 3: Full-Stack Development**  
 *AWS Student Builder Group, VIT Chennai Recruitment Task*
-
+app deployment : https://my-trip-planer-club-req1-98wo-git-main-lohendrak-7066.vercel.app/
 TripWise is a travel-planning application that allows travelers to explore global destinations, query live weather conditions in real-time, inspect rich location details, and build a personalized itinerary persisted securely in a database.
 
 ---
